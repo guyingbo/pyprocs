@@ -25,7 +25,7 @@ def test_timeout():
 def test_bad():
     signal.signal(signal.SIGALRM, handler)
     signal.alarm(2)
-    main(["-s", "app.py"])
+    main(["-t", "1", "-s", "app.py"])
 
 
 def test_main():

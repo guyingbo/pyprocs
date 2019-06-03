@@ -1,6 +1,6 @@
 # multiproc
 
-[![Build Status](https://travis-ci.org/guyingbo/multiproc.svg?branch=master)](https://travis-ci.org/guyingbo/multiproc)
+[![Build Status](https://travis-ci.com/guyingbo/multiproc.svg?branch=master)](https://travis-ci.com/guyingbo/multiproc)
 [![Python Version](https://img.shields.io/pypi/pyversions/multiproc.svg)](https://pypi.python.org/pypi/multiproc)
 [![Version](https://img.shields.io/pypi/v/multiproc.svg)](https://pypi.python.org/pypi/multiproc)
 [![Format](https://img.shields.io/pypi/format/multiproc.svg)](https://pypi.python.org/pypi/multiproc)

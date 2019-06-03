@@ -33,6 +33,7 @@ setup(
     maintainer_email="tensiongyb@gmail.com",
     url="https://github.com/guyingbo/multiproc",
     py_modules=["multiproc"],
+    install_requires=["async-timeout"],
     python_requires=">=3.5",
     classifiers=[
         "License :: OSI Approved :: MIT License",

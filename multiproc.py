@@ -1,7 +1,9 @@
 import sys
+import time
 import signal
 import asyncio
 import argparse
+import async_timeout
 import multiprocessing
 
 __version__ = "0.1.0"
@@ -37,7 +39,7 @@ class Supervisor:
             ):
                 returncode = await task
                 if returncode != 0:
-                    print(f"{p.pid} exit with code {returncode}")
+                    print(f"{p.pid} exit with code {returncode}", file=sys.stderr)
         except asyncio.TimeoutError:
             for p in self.processes:
                 if p.returncode is None:
@@ -60,11 +62,23 @@ class Supervisor:
             *self.exec_args, start_new_session=True
         )
         self.processes.add(p)
-        # task = asyncio.create_task(p.wait())
+        # task = asyncio.create_task(self.monitor_process(p))
         # for python 3.6
-        task = asyncio.ensure_future(p.wait())
+        task = asyncio.ensure_future(self.monitor_process(p))
         self.tasks.add(task)
         task.add_done_callback(self.task_done)
+
+    async def monitor_process(self, p):
+        start = time.time()
+        returncode = await p.wait()
+        end = time.time()
+        if returncode != 0 or (end - start < self.args.bad_seconds):
+            print(f"{p.pid} exit with code {returncode}", file=sys.stderr)
+            try:
+                async with async_timeout.timeout(self.args.restart_wait):
+                    await self._event.wait()
+            except asyncio.TimeoutError:
+                pass
 
     def task_done(self, task):
         self.tasks.remove(task)
@@ -105,6 +119,23 @@ def main(arguments=None):
         action="store_true",
         default=False,
         help=f"use system python executable ({sys.executable}) to run command",
+    )
+    parser.add_argument(
+        "-t",
+        "--restart-wait",
+        metavar="SECONDS",
+        dest="restart_wait",
+        type=int,
+        default=5,
+        help="seconds to wait before restart bad process (exit code != 0)",
+    )
+    parser.add_argument(
+        "--bad-threshold",
+        metavar="SECONDS",
+        dest="bad_seconds",
+        type=int,
+        default=3,
+        help="process exit within n seconds is also considered as bad process",
     )
     args = parser.parse_args(arguments)
     supervisor = Supervisor(args)
