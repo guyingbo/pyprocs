@@ -1,0 +1,7 @@
+[run]
+source = multiproc
+
+[report]
+include =
+    multiproc.py
+    tests/*.py
