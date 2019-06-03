@@ -69,7 +69,7 @@ class Supervisor:
         self._event.set()
 
     def register_signals(self):
-        loop = asyncio.get_running_loop()
+        loop = asyncio.get_event_loop()
         loop.add_signal_handler(signal.SIGINT, self.handle_quit)
         loop.add_signal_handler(signal.SIGTERM, self.handle_quit)
 
@@ -106,7 +106,14 @@ def main(arguments=None):
     )
     args = parser.parse_args(arguments)
     supervisor = Supervisor(args)
-    asyncio.run(supervisor.run_forever())
+    loop = asyncio.new_event_loop()
+    try:
+        asyncio.set_event_loop(loop)
+        loop.run_until_complete(supervisor.run_forever())
+    finally:
+        loop.run_until_complete(loop.shutdown_asyncgens())
+        asyncio.set_event_loop(None)
+        loop.close()
 
 
 if __name__ == "__main__":
