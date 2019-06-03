@@ -60,7 +60,9 @@ class Supervisor:
             *self.exec_args, start_new_session=True
         )
         self.processes.add(p)
-        task = asyncio.create_task(p.wait())
+        # task = asyncio.create_task(p.wait())
+        # for python 3.6
+        task = asyncio.ensure_future(p.wait())
         self.tasks.add(task)
         task.add_done_callback(self.task_done)
 
