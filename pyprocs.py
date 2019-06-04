@@ -37,9 +37,7 @@ class Supervisor:
             for task in asyncio.as_completed(
                 self.tasks, timeout=self.args.stop_timeout
             ):
-                returncode = await task
-                if returncode != 0:
-                    print(f"{p.pid} exit with code {returncode}", file=sys.stderr)
+                await task
         except asyncio.TimeoutError:
             for p in self.processes:
                 if p.returncode is None:
@@ -72,8 +70,12 @@ class Supervisor:
         start = time.time()
         returncode = await p.wait()
         end = time.time()
-        if returncode != 0 or (end - start < self.args.bad_seconds):
-            print(f"{p.pid} exit with code {returncode}", file=sys.stderr)
+        elapse = end - start
+        if returncode != 0 or (elapse < self.args.bad_seconds):
+            print(
+                f"Process {p.pid} exit with code {returncode} in {elapse:.1f} seconds.",
+                file=sys.stderr,
+            )
             try:
                 async with async_timeout.timeout(self.args.restart_wait):
                     await self._event.wait()
