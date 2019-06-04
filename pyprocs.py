@@ -6,7 +6,7 @@ import argparse
 import async_timeout
 import multiprocessing
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 
 class Supervisor:
