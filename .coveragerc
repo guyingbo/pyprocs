@@ -1,7 +1,7 @@
 [run]
-source = multiproc
+source = pyprocs
 
 [report]
 include =
-    multiproc.py
+    pyprocs.py
     tests/*.py

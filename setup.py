@@ -9,7 +9,7 @@ VERSION_RE = re.compile(r"""__version__ = ['"]([0-9.]+)['"]""")
 BASE_PATH = os.path.dirname(__file__)
 
 
-with open(os.path.join(BASE_PATH, "multiproc.py")) as f:
+with open(os.path.join(BASE_PATH, "pyprocs.py")) as f:
     try:
         version = VERSION_RE.search(f.read()).group(1)
     except IndexError:
@@ -21,7 +21,7 @@ with open(os.path.join(BASE_PATH, "README.md")) as readme:
 
 
 setup(
-    name="multiproc",
+    name="pyprocs",
     description="Multiprocess manager",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -31,8 +31,8 @@ setup(
     author_email="tensiongyb@gmail.com",
     maintainer="Yingbo Gu",
     maintainer_email="tensiongyb@gmail.com",
-    url="https://github.com/guyingbo/multiproc",
-    py_modules=["multiproc"],
+    url="https://github.com/guyingbo/pyprocs",
+    py_modules=["pyprocs"],
     install_requires=["async-timeout"],
     python_requires=">=3.5",
     classifiers=[

@@ -1,6 +1,6 @@
 import os
 import signal
-from multiproc import main
+from pyprocs import main
 
 
 def handler(signo, frame):
