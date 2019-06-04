@@ -71,7 +71,9 @@ class Supervisor:
         returncode = await p.wait()
         end = time.time()
         elapse = end - start
-        if returncode != 0 or (elapse < self.args.bad_seconds):
+        if returncode != 0 or (
+            elapse < self.args.bad_seconds and not self._event.is_set()
+        ):
             print(
                 f"Process {p.pid} exit with code {returncode} in {elapse:.1f} seconds.",
                 file=sys.stderr,
