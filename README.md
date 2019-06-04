@@ -9,6 +9,11 @@
 
 Multiprocsess manager, command-line version of python supervisor.
 
+
+## Features
+
+pyprocs command runs multiple processes and then monitor them, restart any child process which exit abnormally.
+
 ## Installation
 
 ~~~
@@ -33,8 +38,7 @@ optional arguments:
                         number of worker processes, default to cpu count
   --graceful-timeout SECONDS
                         seconds to wait before force killing processes
-  -s, --sys-executable  use system python executable
-                        (/usr/local/opt/python/bin/python3.7) to run command
+  -s, --sys-executable  use system python executable to run command
   -t SECONDS, --restart-wait SECONDS
                         seconds to wait before restart failed process (exit code
                         != 0)
@@ -43,7 +47,7 @@ optional arguments:
                         a failure
 ~~~
 
-## Example
+## Examples
 
 ~~~
 python3 -m pyprocs -w 4 --graceful-timeout 10 -s script.py
