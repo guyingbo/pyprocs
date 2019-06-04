@@ -72,7 +72,7 @@ class Supervisor:
         end = time.time()
         elapse = end - start
         if returncode != 0 or (
-            elapse < self.args.bad_seconds and not self._event.is_set()
+            elapse < self.args.fail_seconds and not self._event.is_set()
         ):
             print(
                 f"Process {p.pid} exit with code {returncode} in {elapse:.1f} seconds.",
@@ -131,15 +131,15 @@ def main(arguments=None):
         dest="restart_wait",
         type=int,
         default=5,
-        help="seconds to wait before restart bad process (exit code != 0)",
+        help="seconds to wait before restart failed process (exit code != 0)",
     )
     parser.add_argument(
-        "--bad-threshold",
+        "--fail-threshold",
         metavar="SECONDS",
-        dest="bad_seconds",
+        dest="fail_seconds",
         type=int,
         default=3,
-        help="process exit within n seconds is also considered as bad process",
+        help="process exit within N seconds is also considered as a failure",
     )
     args = parser.parse_args(arguments)
     supervisor = Supervisor(args)
