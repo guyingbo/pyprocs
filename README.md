@@ -9,9 +9,6 @@
 
 Multiprocsess manager, command-line version of python supervisor.
 
-
-## Features
-
 pyprocs command runs multiple processes and then monitor them, restart any child process which exit abnormally.
 
 ## Installation
