@@ -1,21 +1,34 @@
+import asyncio
+import multiprocessing
+import signal
 import sys
 import time
-import signal
-import asyncio
-import argparse
+from typing import List, Union
+
 import async_timeout
-import multiprocessing
+import typer
 
 __version__ = "0.1.1"
 
 
 class Supervisor:
-    def __init__(self, args):
-        self.args = args
+    def __init__(
+        self,
+        exec_args: List[str],
+        sys_exec: bool,
+        stop_timeout: Union[int, float],
+        num_workers: int,
+        failed_seconds: Union[int, float],
+        restart_wait: Union[int, float],
+    ):
+        self.exec_args = exec_args
+        self.stop_timeout = stop_timeout
+        self.num_workers = num_workers
+        self.failed_seconds = failed_seconds
+        self.restart_wait = restart_wait
         self.processes = set()
         self.tasks = set()
-        self.exec_args = self.args.process_args[:]
-        if self.args.sys_exec:
+        if sys_exec:
             self.exec_args.insert(0, sys.executable)
         self._quit = False
 
@@ -34,9 +47,7 @@ class Supervisor:
             if p.returncode is None:
                 p.terminate()
         try:
-            for task in asyncio.as_completed(
-                self.tasks, timeout=self.args.stop_timeout
-            ):
+            for task in asyncio.as_completed(self.tasks, timeout=self.stop_timeout):
                 await task
         except asyncio.TimeoutError:
             for p in self.processes:
@@ -52,7 +63,7 @@ class Supervisor:
                 to_remove.append(p)
         for p in to_remove:
             self.processes.remove(p)
-        for _ in range(self.args.num_workers - len(self.processes)):
+        for _ in range(self.num_workers - len(self.processes)):
             await self._create_one_process()
 
     async def _create_one_process(self):
@@ -72,14 +83,14 @@ class Supervisor:
         end = time.time()
         elapse = end - start
         if returncode != 0 or (
-            elapse < self.args.fail_seconds and not self._event.is_set()
+            elapse < self.failed_seconds and not self._event.is_set()
         ):
             print(
                 f"Process {p.pid} exit with code {returncode} in {elapse:.1f} seconds.",
                 file=sys.stderr,
             )
             try:
-                async with async_timeout.timeout(self.args.restart_wait):
+                async with async_timeout.timeout(self.restart_wait):
                     await self._event.wait()
             except asyncio.TimeoutError:
                 pass
@@ -98,51 +109,45 @@ class Supervisor:
         self._event.set()
 
 
-def main(arguments=None):
-    parser = argparse.ArgumentParser(description="Multiprocess manager")
-    parser.add_argument("process_args", metavar="ARG", nargs="+", help="program to run")
-    parser.add_argument(
+def main(
+    exec_args: List[str] = typer.Argument(..., metavar="command", clamp=True),
+    num_workers: int = typer.Option(
+        multiprocessing.cpu_count(),
         "-w",
-        "--num_workers",
-        type=int,
-        default=multiprocessing.cpu_count(),
-        help=f"number of worker processes, default to cpu count",
-    )
-    parser.add_argument(
+        "--num-workers",
+        help="number of worker processes, default to cpu count",
+    ),
+    stop_timeout: int = typer.Option(
+        10,
         "--graceful-timeout",
         metavar="SECONDS",
-        dest="stop_timeout",
-        type=int,
-        default=10,
         help="seconds to wait before force killing processes",
-    )
-    parser.add_argument(
+    ),
+    sys_exec: bool = typer.Option(
+        False,
         "-s",
         "--sys-executable",
-        dest="sys_exec",
-        action="store_true",
-        default=False,
-        help=f"use system python executable ({sys.executable}) to run command",
-    )
-    parser.add_argument(
+        help=f"use current python executable ({sys.executable}) to run command",
+    ),
+    restart_wait: float = typer.Option(
+        5,
         "-t",
         "--restart-wait",
         metavar="SECONDS",
-        dest="restart_wait",
-        type=int,
-        default=5,
         help="seconds to wait before restart failed process (exit code != 0)",
-    )
-    parser.add_argument(
-        "--fail-threshold",
+    ),
+    failed_seconds: float = typer.Option(
+        3,
+        "--failure-threshold",
         metavar="SECONDS",
-        dest="fail_seconds",
-        type=int,
-        default=3,
         help="process exit within N seconds is also considered as a failure",
+    ),
+):
+    "Multiprocess manager"
+    supervisor = Supervisor(
+        exec_args, sys_exec, stop_timeout, num_workers, failed_seconds, restart_wait
     )
-    args = parser.parse_args(arguments)
-    supervisor = Supervisor(args)
+
     loop = asyncio.new_event_loop()
     try:
         asyncio.set_event_loop(loop)
@@ -154,4 +159,4 @@ def main(arguments=None):
 
 
 if __name__ == "__main__":
-    main()
+    typer.run(main)
